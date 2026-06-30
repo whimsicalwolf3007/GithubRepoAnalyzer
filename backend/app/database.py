@@ -5,17 +5,37 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
-# Normalize DATABASE_URL for asyncpg:
-# 1. Ensure the driver is postgresql+asyncpg (not postgresql or postgres)
-# 2. Convert sslmode= to ssl= (asyncpg uses 'ssl', not 'sslmode')
-_db_url = settings.DATABASE_URL
-if _db_url.startswith("postgresql+asyncpg://"):
-    pass  # Already correct
-elif _db_url.startswith("postgresql://"):
-    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif _db_url.startswith("postgres://"):
-    _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
-_db_url = _db_url.replace("sslmode=", "ssl=")
+# Normalize DATABASE_URL for asyncpg compatibility with Neon:
+# - Ensure the driver prefix is postgresql+asyncpg
+# - Convert sslmode → ssl (asyncpg naming)
+# - Strip params asyncpg doesn't support (e.g. channel_binding)
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+
+_ASYNCPG_UNSUPPORTED_PARAMS = {"channel_binding"}
+
+def _normalize_db_url(url: str) -> str:
+    # Fix driver prefix
+    if url.startswith("postgresql://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+    elif url.startswith("postgres://"):
+        url = "postgresql+asyncpg://" + url[len("postgres://"):]
+
+    parsed = urlparse(url)
+    params = parse_qs(parsed.query, keep_blank_values=True)
+
+    # Convert sslmode → ssl
+    if "sslmode" in params:
+        params["ssl"] = params.pop("sslmode")
+
+    # Remove unsupported params
+    for key in _ASYNCPG_UNSUPPORTED_PARAMS:
+        params.pop(key, None)
+
+    # Rebuild query string (single values, not lists)
+    clean_query = urlencode({k: v[0] for k, v in params.items()})
+    return urlunparse(parsed._replace(query=clean_query))
+
+_db_url = _normalize_db_url(settings.DATABASE_URL)
 
 # Create async engine for PostgreSQL
 engine = create_async_engine(

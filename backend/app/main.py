@@ -47,7 +47,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware — allow frontend dev server + production URL
+# CORS middleware — allow frontend dev server + production URLs
 cors_origins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -55,11 +55,14 @@ cors_origins = [
     "http://127.0.0.1:3000",
 ]
 if settings.FRONTEND_URL:
-    cors_origins.append(settings.FRONTEND_URL)
+    clean_url = settings.FRONTEND_URL.strip().rstrip("/")
+    if clean_url not in cors_origins:
+        cors_origins.append(clean_url)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

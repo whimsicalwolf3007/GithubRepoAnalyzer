@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
+    # Frontend URL (for CORS in production)
+    FRONTEND_URL: Optional[str] = None
+
     # Upload
     UPLOAD_DIR: str = "./uploads"
     REPORTS_DIR: str = "./reports"

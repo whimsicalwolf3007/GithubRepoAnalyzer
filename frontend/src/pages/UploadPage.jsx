@@ -25,7 +25,11 @@ export default function UploadPage() {
       const res = await uploadExcel(file);
       setUploadResult(res.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Upload failed. Please check the file format.');
+      if (!err.response) {
+        setError('Cannot connect to the backend server. Please verify VITE_API_URL or CORS settings.');
+      } else {
+        setError(err.response.data?.detail || 'Upload failed. Please check the file format.');
+      }
     } finally {
       setUploading(false);
     }
@@ -52,7 +56,11 @@ export default function UploadPage() {
       const res = await uploadUrl(urlInput.trim());
       setUploadResult(res.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid GitHub URL');
+      if (!err.response) {
+        setError('Cannot connect to the backend server. Please verify VITE_API_URL or CORS settings.');
+      } else {
+        setError(err.response.data?.detail || 'Invalid GitHub URL');
+      }
     } finally {
       setUploading(false);
     }

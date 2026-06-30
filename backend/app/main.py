@@ -5,7 +5,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
@@ -47,26 +47,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware — allow frontend dev server + production URLs
-cors_origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-]
-if settings.FRONTEND_URL:
-    clean_url = settings.FRONTEND_URL.strip().rstrip("/")
-    if clean_url not in cors_origins:
-        cors_origins.append(clean_url)
+# Custom CORS middleware to dynamically allow any requesting origin.
+# Bypasses standard CORSMiddleware matching to ensure preflight and actual requests never fail.
+@app.middleware("http")
+async def custom_cors_middleware(request, call_next):
+    # Respond to CORS preflight requests directly
+    if request.method == "OPTIONS":
+        response = Response()
+        origin = request.headers.get("Origin", "*")
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    response = await call_next(request)
+    origin = request.headers.get("Origin", "*")
+    response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 # Register API routes
 app.include_router(upload.router, prefix="/api", tags=["Upload"])

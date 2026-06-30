@@ -1,0 +1,35 @@
+# Ignore the massive AI model (it's loaded from the host, not needed inside the image)
+*.gguf
+Modelfile
+
+# Ignore local environment files
+.env
+.env.local
+.venv
+env/
+venv/
+ENV/
+
+# Ignore frontend dependencies
+**/node_modules
+**/dist
+**/.next
+**/.vite
+
+# Ignore Git and OS files
+.git
+.gitignore
+.dockerignore
+.vscode
+.DS_Store
+Thumbs.db
+
+# Ignore logs and caches
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.log
+.pytest_cache
+.coverage
+htmlcov

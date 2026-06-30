@@ -1,0 +1,138 @@
+.repos__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.repos__search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  transition: border-color var(--transition-fast);
+}
+
+.repos__search:focus-within {
+  border-color: var(--accent-blue);
+}
+
+.repos__search-icon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.repos__search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2);
+}
+
+.repos__search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.repos__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-tertiary);
+}
+
+.repos__filter-select {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.repos__filter-select option {
+  background: var(--bg-secondary);
+}
+
+.repos__count {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.repos__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-12);
+}
+
+/* ── Table ── */
+.repos__table-wrapper {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.repos__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.repos__table th {
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.repos__table td {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.repos__row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.repos__row:hover {
+  background: var(--bg-glass);
+}
+
+.repos__name-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.repos__name-icon {
+  color: var(--accent-blue);
+}
+
+.repos__name {
+  font-weight: 600;
+}
+
+.repos__owner {
+  color: var(--text-secondary);
+}
+
+.repos__stars {
+  color: var(--warning);
+  font-size: var(--font-size-xs);
+}
+
+.repos__actions {
+  display: flex;
+  gap: var(--space-2);
+}

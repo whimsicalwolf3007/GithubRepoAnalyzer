@@ -5,9 +5,17 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
-# asyncpg uses 'ssl' instead of the standard PostgreSQL 'sslmode' parameter.
-# Convert automatically so any DATABASE_URL format works.
-_db_url = settings.DATABASE_URL.replace("sslmode=", "ssl=")
+# Normalize DATABASE_URL for asyncpg:
+# 1. Ensure the driver is postgresql+asyncpg (not postgresql or postgres)
+# 2. Convert sslmode= to ssl= (asyncpg uses 'ssl', not 'sslmode')
+_db_url = settings.DATABASE_URL
+if _db_url.startswith("postgresql+asyncpg://"):
+    pass  # Already correct
+elif _db_url.startswith("postgresql://"):
+    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+_db_url = _db_url.replace("sslmode=", "ssl=")
 
 # Create async engine for PostgreSQL
 engine = create_async_engine(

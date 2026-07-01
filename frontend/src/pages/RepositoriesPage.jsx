@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   GitBranch, Search, Filter, Play, Trash2,
@@ -7,6 +7,8 @@ import {
 import { getRepositories, triggerAnalysis, deleteRepository } from '../api/client';
 import './RepositoriesPage.css';
 
+const PROCESSING_STATUSES = ['queued', 'scraping', 'analyzing', 'building'];
+
 export default function RepositoriesPage() {
   const [repos, setRepos] = useState([]);
   const [total, setTotal] = useState(0);
@@ -14,10 +16,14 @@ export default function RepositoriesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [analyzingId, setAnalyzingId] = useState(null);
+  const pollingRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchRepos();
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [statusFilter]);
 
   const fetchRepos = async () => {
@@ -29,6 +35,34 @@ export default function RepositoriesPage() {
       const res = await getRepositories(params);
       setRepos(res.data.repositories);
       setTotal(res.data.total);
+
+      // Auto-poll if any repos are in processing states
+      const hasProcessing = res.data.repositories.some(
+        (r) => PROCESSING_STATUSES.includes(r.status)
+      );
+      if (hasProcessing && !pollingRef.current) {
+        pollingRef.current = setInterval(async () => {
+          try {
+            const refreshRes = await getRepositories(params);
+            setRepos(refreshRes.data.repositories);
+            setTotal(refreshRes.data.total);
+
+            // Stop polling if no more processing repos
+            const stillProcessing = refreshRes.data.repositories.some(
+              (r) => PROCESSING_STATUSES.includes(r.status)
+            );
+            if (!stillProcessing && pollingRef.current) {
+              clearInterval(pollingRef.current);
+              pollingRef.current = null;
+            }
+          } catch (err) {
+            console.error('Auto-refresh failed:', err);
+          }
+        }, 3000);
+      } else if (!hasProcessing && pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     } catch (err) {
       console.error('Failed to fetch repos:', err);
     } finally {
